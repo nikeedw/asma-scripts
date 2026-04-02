@@ -64,10 +64,16 @@ function god() {
           if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push; then
             local cur_subject
             cur_subject=$(git log -1 --format=%s)
-            if [[ $cur_subject != ASMA-* ]]; then
+            if [[ $cur_subject != *ASMA-* ]]; then
               local cur_body
               cur_body=$(git log -1 --format=%b)
-              git commit --amend -m "$task $cur_subject" -m "$cur_body"
+              # Insert after conventional commit prefix e.g. "feat(scope): "
+              if [[ $cur_subject =~ ^[a-z]+\([^)]+\)?: |^[a-z]+:  ]]; then
+                local amended="${cur_subject/: /: $task }"
+                git commit --amend -m "$amended" -m "$cur_body"
+              else
+                git commit --amend -m "$task $cur_subject" -m "$cur_body"
+              fi
             fi
           fi
         elif [[ " ${*:2} " == *" --release "* ]]; then
