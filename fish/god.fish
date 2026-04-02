@@ -13,10 +13,37 @@ function god --description 'Local shortcut commands for God'
         case commit
             set -l branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
             set -l merge_msg_file (git rev-parse --git-dir 2>/dev/null)/MERGE_MSG
+
+            # Parse optional --from <task> flag
+            set -l task ""
+            set -l i 2
+            while test $i -le (count $argv)
+                if test "$argv[$i]" = --from
+                    set i (math $i + 1)
+                    if test $i -le (count $argv)
+                        set task $argv[$i]
+                    end
+                    break
+                end
+                set i (math $i + 1)
+            end
+            if test -n "$task"; and not string match -q 'ASMA-*' "$task"
+                set task "ASMA-$task"
+            end
+
             if test -f "$merge_msg_file"
                 git commit --no-edit
             else if test "$branch" = master
-                if contains -- --release $argv[2..-1]
+                if test -n "$task"
+                    # --from provided: generate AI message, then prepend ASMA key
+                    if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push
+                        set -l cur_subject (git log -1 --format=%s)
+                        if not string match -q 'ASMA-*' "$cur_subject"
+                            set -l cur_body (git log -1 --format=%b)
+                            git commit --amend -m "$task $cur_subject" -m "$cur_body"
+                        end
+                    end
+                else if contains -- --release $argv[2..-1]
                     asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release
                 else
                     asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push
@@ -105,6 +132,7 @@ function god --description 'Local shortcut commands for God'
             echo 'god pull --master      -> git pull origin master'
             echo 'god commit             -> asma git commit --auto-provider ai --include-unstaged --include-untracked'
             echo 'god commit (master)    -> + --skip-jira-key --allow-protected-push'
+            echo 'god commit --from 123  -> AI message on master, then amend to prepend ASMA-123 (no --skip-jira-key)'
             echo 'god commit --release   -> + --force-release  (master only)'
             echo 'god commit (MERGING)   -> git commit --no-edit'
             echo 'god pr --from 123      -> asma git branch create --from ASMA-123; asma git commit ... --push --create-pr; gh pr view --web'

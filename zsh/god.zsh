@@ -39,10 +39,38 @@ function god() {
       branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
       local merge_msg_file
       merge_msg_file=$(git rev-parse --git-dir 2>/dev/null)/MERGE_MSG
+
+      # Parse optional --from <task> flag
+      local task=""
+      local args=("${@:2}")
+      local i=0
+      while [[ $i -lt ${#args[@]} ]]; do
+        if [[ "${args[$i]}" == "--from" ]]; then
+          i=$((i+1))
+          task="${args[$i]}"
+          break
+        fi
+        i=$((i+1))
+      done
+      if [[ -n "$task" && $task != ASMA-* ]]; then
+        task="ASMA-$task"
+      fi
+
       if [[ -f "$merge_msg_file" ]]; then
         git commit --no-edit
       elif [[ "$branch" == "master" ]]; then
-        if [[ " ${*:2} " == *" --release "* ]]; then
+        if [[ -n "$task" ]]; then
+          # --from provided: generate AI message, then prepend ASMA key
+          if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push; then
+            local cur_subject
+            cur_subject=$(git log -1 --format=%s)
+            if [[ $cur_subject != ASMA-* ]]; then
+              local cur_body
+              cur_body=$(git log -1 --format=%b)
+              git commit --amend -m "$task $cur_subject" -m "$cur_body"
+            fi
+          fi
+        elif [[ " ${*:2} " == *" --release "* ]]; then
           asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release
         else
           asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push
@@ -136,6 +164,7 @@ function god() {
       echo 'god pull --master      -> git pull origin master'
       echo 'god commit             -> asma git commit --auto-provider ai --include-unstaged --include-untracked'
       echo 'god commit (master)    -> + --skip-jira-key --allow-protected-push'
+      echo 'god commit --from 123  -> AI message on master, then amend to prepend ASMA-123 (no --skip-jira-key)'
       echo 'god commit --release   -> + --force-release  (master only)'
       echo 'god commit (MERGING)   -> git commit --no-edit'
       echo 'god pr --from 123      -> asma git branch create --from ASMA-123; asma git commit ... --push --create-pr; gh pr view --web'

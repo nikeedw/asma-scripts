@@ -21,11 +21,12 @@ complete -c god -n "__fish_use_subcommand" -a pull     -d "Run asma git pull"
 complete -c god -n "__fish_seen_subcommand_from pull" -a --master -d "Pull from origin master"
 complete -c god -n "__fish_use_subcommand" -a commit   -d "Run AI-assisted asma git commit"
 
-# --release flag for commit
-complete -c god -n "__fish_seen_subcommand_from commit" -a --release -d "Force release (master only)"
+# commit flags
+complete -c god -n "__fish_seen_subcommand_from commit; and not __god_prev_token_is_from" -a --release -d "Force release (master only)"
+complete -c god -n "__fish_seen_subcommand_from commit; and not __god_prev_token_is_from" -a --from   -d "Jira ticket to prepend to commit message (master only)"
+complete -c god -n "__fish_seen_subcommand_from commit; and __god_prev_token_is_from"            -a "(__god_complete_asma_ticket)"
 complete -c god -n "__fish_use_subcommand" -a pr       -d "Create branch from ticket, commit and open PR"
 complete -c god -n "__fish_use_subcommand" -a branch   -d "Create branch from ticket"
-complete -c god -n "__fish_use_subcommand" -a run      -d "Start local app (pnpm dev)"
 complete -c god -n "__fish_use_subcommand" -a start    -d "Open asma-modules in VS Code"
 complete -c god -n "__fish_use_subcommand" -a help     -d "Show usage"
 

@@ -44,19 +44,20 @@ source ~/.zshrc
 
 ## `god` command reference
 
-| Command | Description |
-|---|---|
-| `god push` | `git push` |
-| `god pull` | `asma git pull` |
-| `god pull --master` | `git pull origin master` |
-| `god commit` | AI-assisted commit (staged + unstaged) |
-| `god commit` *(on master)* | + `--skip-jira-key --allow-protected-push` |
-| `god commit --release` | Force release bump (master only) |
-| `god commit` *(while merging)* | `git commit --no-edit` |
-| `god pr --from <ticket>` | Create branch → commit → push → open PR |
-| `god pr --open` | Open existing PR in browser (creates one if missing) |
-| `god branch --from <ticket>` | Create branch from Jira ticket |
-| `god start` | `cd ~/asma/asma-modules && code .` |
+| Command                                    | Description                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------ |
+| `god push`                                 | `git push`                                                               |
+| `god pull`                                 | `asma git pull`                                                          |
+| `god pull --master`                        | `git pull origin master`                                                 |
+| `god commit`                               | AI-assisted commit (staged + unstaged)                                   |
+| `god commit` _(on master)_                 | + `--skip-jira-key --allow-protected-push`                               |
+| `god commit --from <ticket>` _(on master)_ | AI message, then amend to prepend `ASMA-<ticket>` (no `--skip-jira-key`) |
+| `god commit --release`                     | Force release bump (master only)                                         |
+| `god commit` _(while merging)_             | `git commit --no-edit`                                                   |
+| `god pr --from <ticket>`                   | Create branch → commit → push → open PR                                  |
+| `god pr --open`                            | Open existing PR in browser (creates one if missing)                     |
+| `god branch --from <ticket>`               | Create branch from Jira ticket                                           |
+| `god start`                                | `cd ~/asma/asma-modules && code .`                                       |
 
 ### Ticket format
 
@@ -68,9 +69,9 @@ Both `ASMA-123` and `123` are accepted — the `ASMA-` prefix is added automatic
 
 Available in both fish (`aliases.fish`) and zsh (`god.zsh`):
 
-| Shortcut | Expands to |
-|---|---|
-| `pdev` | `pnpm dev` |
-| `padd` | `pnpm add` |
-| `prem` | `pnpm remove` |
+| Shortcut     | Expands to                   |
+| ------------ | ---------------------------- |
+| `pdev`       | `pnpm dev`                   |
+| `padd`       | `pnpm add`                   |
+| `prem`       | `pnpm remove`                |
 | `mkcd <dir>` | `mkdir -p <dir> && cd <dir>` |
