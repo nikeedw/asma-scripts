@@ -61,7 +61,7 @@ function god --description 'Local shortcut commands for God'
                 if not string match -q 'ASMA-*' $task
                     set task "ASMA-$task"
                 end
-                asma git branch create --from $task; and asma git commit --auto-provider ai --include-untracked --include-unstaged --push --create-pr
+                asma git branch create --from $task; and asma git commit --auto-provider ai --include-untracked --include-unstaged --push --create-pr; and gh pr view --web
             end
         case branch
             if test (count $argv) -lt 2
@@ -107,7 +107,7 @@ function god --description 'Local shortcut commands for God'
             echo 'god commit (master)    -> + --skip-jira-key --allow-protected-push'
             echo 'god commit --release   -> + --force-release  (master only)'
             echo 'god commit (MERGING)   -> git commit --no-edit'
-            echo 'god pr --from 123      -> asma git branch create --from ASMA-123; asma git commit ... --push --create-pr'
+            echo 'god pr --from 123      -> asma git branch create --from ASMA-123; asma git commit ... --push --create-pr; gh pr view --web'
             echo 'god pr --open          -> gh pr view --web (or gh pr create --fill if no PR yet)'
             echo 'god branch --from 123  -> asma git branch create --from ASMA-123'
             echo 'god start              -> cd ~/asma/asma-modules && code .'
