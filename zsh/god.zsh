@@ -28,10 +28,15 @@ function god() {
       git push "${@:2}"
       ;;
     pull)
-      if [[ " ${*:2} " == *" --master "* ]]; then
-        git pull origin master
+      local pull_args=("${@:2}")
+      if [[ " ${pull_args[*]} " == *" --recursive "* ]]; then
+        pull_args=(${pull_args:#--recursive})
+        asma git pull "${pull_args[@]}"
+      elif [[ " ${pull_args[*]} " == *" --master "* ]]; then
+        pull_args=(${pull_args:#--master})
+        git pull origin master "${pull_args[@]}"
       else
-        asma git pull
+        git pull "${pull_args[@]}"
       fi
       ;;
     commit)
@@ -67,8 +72,9 @@ function god() {
             if [[ $cur_subject != *ASMA-* ]]; then
               local cur_body
               cur_body=$(git log -1 --format=%b)
+              local conventional_prefix_pattern='^[a-z]+(\([^)]+\))?: |^[a-z]+: '
               # Insert after conventional commit prefix e.g. "feat(scope): "
-              if [[ $cur_subject =~ ^[a-z]+\([^)]+\)?: |^[a-z]+:  ]]; then
+              if [[ $cur_subject =~ $conventional_prefix_pattern ]]; then
                 local amended="${cur_subject/: /: $task }"
                 git commit --amend -m "$amended" -m "$cur_body"
               else
@@ -158,7 +164,7 @@ function god() {
       ;;
     ''|help|-h|--help)
       echo 'Usage: god push [extra args]'
-      echo '       god pull [--master]'
+      echo '       god pull [--master] [--recursive] [extra args]'
       echo '       god commit [--release]'
       echo '       god pr --from <ASMA-number|number>'
       echo '       god pr --open'
@@ -166,8 +172,9 @@ function god() {
       echo '       god start'
       echo ''
       echo 'god push               -> git push'
-      echo 'god pull               -> asma git pull'
+      echo 'god pull               -> git pull'
       echo 'god pull --master      -> git pull origin master'
+      echo 'god pull --recursive   -> asma git pull'
       echo 'god commit             -> asma git commit --auto-provider ai --include-unstaged --include-untracked'
       echo 'god commit (master)    -> + --skip-jira-key --allow-protected-push'
       echo 'god commit --from 123  -> AI message on master, then amend to prepend ASMA-123 (no --skip-jira-key)'

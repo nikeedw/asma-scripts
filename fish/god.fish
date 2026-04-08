@@ -5,10 +5,16 @@ function god --description 'Local shortcut commands for God'
         case push
             git push $argv[2..-1]
         case pull
-            if contains -- --master $argv[2..-1]
-                git pull origin master
+            set -l pull_args $argv[2..-1]
+
+            if contains -- --recursive $pull_args
+                set -l recursive_args (string match -v -- --recursive $pull_args)
+                asma git pull $recursive_args
+            else if contains -- --master $pull_args
+                set -l master_args (string match -v -- --master $pull_args)
+                git pull origin master $master_args
             else
-                asma git pull
+                git pull $pull_args
             end
         case commit
             set -l branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -126,7 +132,7 @@ function god --description 'Local shortcut commands for God'
             cd ~/asma/asma-modules; and code .
         case '' help -h --help
             echo 'Usage: god push [extra args]'
-            echo '       god pull [--master]'
+            echo '       god pull [--master] [--recursive] [extra args]'
             echo '       god commit [--release]'
             echo '       god pr --from <ASMA-number|number>'
             echo '       god pr --open'
@@ -134,8 +140,9 @@ function god --description 'Local shortcut commands for God'
             echo '       god start'
             echo ''
             echo 'god push               -> git push'
-            echo 'god pull               -> asma git pull'
+            echo 'god pull               -> git pull'
             echo 'god pull --master      -> git pull origin master'
+            echo 'god pull --recursive   -> asma git pull'
             echo 'god commit             -> asma git commit --auto-provider ai --include-unstaged --include-untracked'
             echo 'god commit (master)    -> + --skip-jira-key --allow-protected-push'
             echo 'god commit --from 123  -> AI message on master, then amend to prepend ASMA-123 (no --skip-jira-key)'

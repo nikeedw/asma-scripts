@@ -15,10 +15,11 @@ end
 complete -c god -f
 
 complete -c god -n "__fish_use_subcommand" -a push     -d "Run git push"
-complete -c god -n "__fish_use_subcommand" -a pull     -d "Run asma git pull"
+complete -c god -n "__fish_use_subcommand" -a pull     -d "Run git pull"
 
-# --master flag for pull
+# pull flags
 complete -c god -n "__fish_seen_subcommand_from pull" -a --master -d "Pull from origin master"
+complete -c god -n "__fish_seen_subcommand_from pull" -a --recursive -d "Run asma git pull"
 complete -c god -n "__fish_use_subcommand" -a commit   -d "Run AI-assisted asma git commit"
 
 # commit flags

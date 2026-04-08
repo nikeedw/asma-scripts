@@ -11,7 +11,8 @@ scripts/
 │   ├── god.fish               # god command function for fish shell
 │   └── god.completions.fish   # tab completions for god command
 └── zsh/
-    └── god.zsh                # god command + pnpm aliases + mkcd for zsh
+    ├── god.zsh                # god command + pnpm aliases + mkcd for zsh
+    └── _god                   # tab completions for god command in zsh
 ```
 
 ## Installation
@@ -35,8 +36,22 @@ source ~/.config/fish/completions/god.fish
 ### Zsh
 
 ```zsh
-# Source from ~/.zshrc
+# Source function from ~/.zshrc
 echo 'source ~/ASMA/scripts/zsh/god.zsh' >> ~/.zshrc
+
+# Install completions
+mkdir -p ~/.zsh/completions
+cp zsh/_god ~/.zsh/completions/_god
+
+# Ensure custom completions are on fpath before compinit
+# Example:
+# if [ -d "$HOME/.zsh/completions" ]; then
+#   fpath=("$HOME/.zsh/completions" $fpath)
+# fi
+
+# Reload
+autoload -Uz compinit
+compinit -i
 source ~/.zshrc
 ```
 
@@ -47,8 +62,9 @@ source ~/.zshrc
 | Command                                    | Description                                                                                              |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | `god push`                                 | `git push`                                                                                               |
-| `god pull`                                 | `asma git pull`                                                                                          |
+| `god pull`                                 | `git pull`                                                                                               |
 | `god pull --master`                        | `git pull origin master`                                                                                 |
+| `god pull --recursive`                     | `asma git pull`                                                                                          |
 | `god commit`                               | AI-assisted commit (staged + unstaged)                                                                   |
 | `god commit` _(on master)_                 | + `--skip-jira-key --allow-protected-push`                                                               |
 | `god commit --from <ticket>` _(on master)_ | AI message, then amend to insert `ASMA-<ticket>` after conventional commit prefix (no `--skip-jira-key`) |

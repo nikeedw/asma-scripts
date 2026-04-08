@@ -1,0 +1,59 @@
+#compdef god
+
+_god_subcommands() {
+  local -a subcommands
+  subcommands=(
+    'push:Run git push'
+    'pull:Run git pull (--master for origin master, --recursive for asma git pull)'
+    'commit:Run AI-assisted asma git commit'
+    'pr:Create branch from ticket, commit and open PR'
+    'branch:Create branch from ticket'
+    'start:Open asma-modules in VS Code'
+    'help:Show usage'
+  )
+  _describe 'subcommand' subcommands
+}
+
+_god_jira_tickets() {
+  # Delegate to asma's own completion for ticket suggestions
+  local -a tickets
+  tickets=(${(f)"$(asma git branch create --from '' 2>/dev/null | grep -oE 'ASMA-[0-9]+' || true)"})
+  _describe 'jira ticket' tickets
+}
+
+_god() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_god_subcommands' \
+    '*:: :->args'
+
+  case $state in
+    args)
+      case $line[1] in
+        pull)
+          _arguments \
+            '--master[Pull from origin master]' \
+            '--recursive[Run asma git pull]'
+          ;;
+        commit)
+          _arguments \
+            '--release[Force release (master only)]' \
+            '--from[Jira ticket to prepend to commit message (master only)]: :_god_jira_tickets'
+          ;;
+        pr)
+          _arguments \
+            '--open[Open existing PR in browser]' \
+            '--from[Jira ticket to create branch and PR from]: :_god_jira_tickets'
+          ;;
+        branch)
+          _arguments \
+            '--from[Jira ticket to create branch from]: :_god_jira_tickets'
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_god "$@"
