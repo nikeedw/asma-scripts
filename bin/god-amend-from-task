@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+set -eu
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: god-amend-from-task <ASMA-ticket>" >&2
+    exit 1
+fi
+
+task=$1
+cur_subject=$(git log -1 --format=%s)
+
+case "$cur_subject" in
+    *ASMA-*)
+        exit 0
+        ;;
+esac
+
+cur_body=$(git log -1 --format=%b)
+
+if printf '%s\n' "$cur_subject" | grep -Eq '^[a-z]+(\([^)]+\))?: '; then
+    amended_subject=$(printf '%s\n' "$cur_subject" | sed -E "s/^([a-z]+(\([^)]+\))?: )/\\1$task /")
+else
+    amended_subject="$task $cur_subject"
+fi
+
+if [ -n "$cur_body" ]; then
+    git commit --amend -m "$amended_subject" -m "$cur_body"
+else
+    git commit --amend -m "$amended_subject"
+fi

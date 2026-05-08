@@ -67,20 +67,7 @@ function god() {
         if [[ -n "$task" ]]; then
           # --from provided: generate AI message, then prepend ASMA key
           if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push; then
-            local cur_subject
-            cur_subject=$(git log -1 --format=%s)
-            if [[ $cur_subject != *ASMA-* ]]; then
-              local cur_body
-              cur_body=$(git log -1 --format=%b)
-              local conventional_prefix_pattern='^[a-z]+(\([^)]+\))?: |^[a-z]+: '
-              # Insert after conventional commit prefix e.g. "feat(scope): "
-              if [[ $cur_subject =~ $conventional_prefix_pattern ]]; then
-                local amended="${cur_subject/: /: $task }"
-                git commit --amend -m "$amended" -m "$cur_body"
-              else
-                git commit --amend -m "$task $cur_subject" -m "$cur_body"
-              fi
-            fi
+            "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
           fi
         elif [[ " ${*:2} " == *" --release "* ]]; then
           asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release

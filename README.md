@@ -6,6 +6,8 @@ Personal shell scripts and configurations for ASMA development workflow.
 
 ```
 scripts/
+├── bin/
+│   └── god-amend-from-task    # shared helper for multiline-safe commit amend
 ├── fish/
 │   ├── aliases.fish           # pnpm abbreviations + mkcd
 │   ├── god.fish               # god command function for fish shell
@@ -20,15 +22,17 @@ scripts/
 ### Fish
 
 ```fish
-# Copy function and aliases
-cp fish/god.fish ~/.config/fish/functions/god.fish
+# Source the canonical function from your personal fish function file
+printf '%s\n' 'source "$HOME/asma/scripts/fish/god.fish"' > ~/.config/fish/functions/god.fish
+
+# Copy aliases
 cp fish/aliases.fish ~/.config/fish/conf.d/aliases.fish
 
 # Copy completions
 cp fish/god.completions.fish ~/.config/fish/completions/god.fish
 
 # Reload
-source ~/.config/fish/functions/god.fish
+source ~/asma/scripts/fish/god.fish
 complete -e -c god
 source ~/.config/fish/completions/god.fish
 ```
@@ -37,7 +41,7 @@ source ~/.config/fish/completions/god.fish
 
 ```zsh
 # Source function from ~/.zshrc
-echo 'source ~/ASMA/scripts/zsh/god.zsh' >> ~/.zshrc
+echo 'source "$HOME/asma/scripts/zsh/god.zsh"' >> ~/.zshrc
 
 # Install completions
 mkdir -p ~/.zsh/completions

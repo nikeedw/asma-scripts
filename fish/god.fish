@@ -43,17 +43,7 @@ function god --description 'Local shortcut commands for God'
                 if test -n "$task"
                     # --from provided: generate AI message, then prepend ASMA key
                     if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push
-                        set -l cur_subject (git log -1 --format=%s)
-                        if not string match -q '*ASMA-*' "$cur_subject"
-                            set -l cur_body (git log -1 --format=%b)
-                            # Insert after conventional commit prefix e.g. "feat(scope): "
-                            if string match -qr '^[a-z]+\([^)]+\)?: |^[a-z]+: ' "$cur_subject"
-                                set -l amended (string replace -r ': ' ": $task " "$cur_subject")
-                                git commit --amend -m "$amended" -m "$cur_body"
-                            else
-                                git commit --amend -m "$task $cur_subject" -m "$cur_body"
-                            end
-                        end
+                        "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
                     end
                 else if contains -- --release $argv[2..-1]
                     asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release
