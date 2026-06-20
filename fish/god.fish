@@ -20,16 +20,24 @@ function god --description 'Local shortcut commands for God'
             set -l branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
             set -l merge_msg_file (git rev-parse --git-dir 2>/dev/null)/MERGE_MSG
 
-            # Parse optional --from <task> flag
+            # Parse --from <task> and collect passthrough git flags
             set -l task ""
+            set -l git_flags
+            set -l no_verify 0
             set -l i 2
             while test $i -le (count $argv)
-                if test "$argv[$i]" = --from
-                    set i (math $i + 1)
-                    if test $i -le (count $argv)
-                        set task $argv[$i]
-                    end
-                    break
+                switch $argv[$i]
+                    case --from
+                        set i (math $i + 1)
+                        if test $i -le (count $argv)
+                            set task $argv[$i]
+                        end
+                    case --no-verify
+                        set no_verify 1
+                    case --release --help -h
+                        # handled separately; do not pass through
+                    case '*'
+                        set -a git_flags $argv[$i]
                 end
                 set i (math $i + 1)
             end
@@ -37,24 +45,38 @@ function god --description 'Local shortcut commands for God'
                 set task "ASMA-$task"
             end
 
+            # --no-verify: skip lefthook by setting LEFTHOOK=0 (asma doesn't passthrough to git)
+            set -l lefthook_val (math "1 - $no_verify")
+
             if test -f "$merge_msg_file"
-                git commit --no-edit
+                env LEFTHOOK=$lefthook_val git commit --no-edit $git_flags
             else if test "$branch" = master
                 if test -n "$task"
                     # --from provided: generate AI message, then prepend ASMA key
-                    if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push
-                        "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+                    if env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push $git_flags
+                        env LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
                     end
                 else if contains -- --release $argv[2..-1]
-                    asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release
+                    env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release $git_flags
                 else
-                    asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push
+                    env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push $git_flags
                 end
             else
-                if contains -- --release $argv[2..-1]
-                    asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release
+                if test -n "$task"
+                    # --from provided: generate AI message, then prepend ASMA key
+                    if contains -- --release $argv[2..-1]
+                        if env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release $git_flags
+                            env LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+                        end
+                    else
+                        if env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked $git_flags
+                            env LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+                        end
+                    end
+                else if contains -- --release $argv[2..-1]
+                    env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release $git_flags
                 else
-                    asma git commit --auto-provider ai --include-unstaged --include-untracked
+                    env LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked $git_flags
                 end
             end
         case pr

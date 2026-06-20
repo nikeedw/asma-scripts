@@ -45,40 +45,66 @@ function god() {
       local merge_msg_file
       merge_msg_file=$(git rev-parse --git-dir 2>/dev/null)/MERGE_MSG
 
-      # Parse optional --from <task> flag
+      # Parse --from <task> and collect passthrough git flags
       local task=""
+      local git_flags=()
+      local no_verify=0
       local args=("${@:2}")
       local i=0
       while [[ $i -lt ${#args[@]} ]]; do
-        if [[ "${args[$i]}" == "--from" ]]; then
-          i=$((i+1))
-          task="${args[$i]}"
-          break
-        fi
+        case "${args[$i]}" in
+          --from)
+            i=$((i+1))
+            task="${args[$i]}"
+            ;;
+          --no-verify)
+            no_verify=1
+            ;;
+          --release|--help|-h)
+            # handled separately; do not pass through
+            ;;
+          *)
+            git_flags+=("${args[$i]}")
+            ;;
+        esac
         i=$((i+1))
       done
       if [[ -n "$task" && $task != ASMA-* ]]; then
         task="ASMA-$task"
       fi
 
+      # --no-verify: skip lefthook via LEFTHOOK=0 (asma doesn't passthrough to git)
+      local lefthook_val=$(( 1 - no_verify ))
+
       if [[ -f "$merge_msg_file" ]]; then
-        git commit --no-edit
+        LEFTHOOK=$lefthook_val git commit --no-edit "${git_flags[@]}"
       elif [[ "$branch" == "master" ]]; then
         if [[ -n "$task" ]]; then
           # --from provided: generate AI message, then prepend ASMA key
-          if asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push; then
-            "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+          if LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --allow-protected-push "${git_flags[@]}"; then
+            LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
           fi
         elif [[ " ${*:2} " == *" --release "* ]]; then
-          asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release
+          LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push --force-release "${git_flags[@]}"
         else
-          asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push
+          LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --skip-jira-key --allow-protected-push "${git_flags[@]}"
         fi
       else
-        if [[ " ${*:2} " == *" --release "* ]]; then
-          asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release
+        if [[ -n "$task" ]]; then
+          # --from provided: generate AI message, then prepend ASMA key
+          if [[ " ${*:2} " == *" --release "* ]]; then
+            if LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release "${git_flags[@]}"; then
+              LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+            fi
+          else
+            if LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked "${git_flags[@]}"; then
+              LEFTHOOK=$lefthook_val "$HOME/asma/scripts/bin/god-amend-from-task" "$task"
+            fi
+          fi
+        elif [[ " ${*:2} " == *" --release "* ]]; then
+          LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked --force-release "${git_flags[@]}"
         else
-          asma git commit --auto-provider ai --include-unstaged --include-untracked
+          LEFTHOOK=$lefthook_val asma git commit --auto-provider ai --include-unstaged --include-untracked "${git_flags[@]}"
         fi
       fi
       ;;
