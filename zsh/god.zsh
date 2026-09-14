@@ -50,8 +50,8 @@ function god() {
       local git_flags=()
       local no_verify=0
       local args=("${@:2}")
-      local i=0
-      while [[ $i -lt ${#args[@]} ]]; do
+      local i=1
+      while [[ $i -le ${#args[@]} ]]; do
         case "${args[$i]}" in
           --from)
             i=$((i+1))
@@ -122,8 +122,8 @@ function god() {
         # support both: god pr --from 123  and  god pr 123
         local task=""
         local args=("${@:2}")
-        local i=0
-        while [[ $i -lt ${#args[@]} ]]; do
+        local i=1
+        while [[ $i -le ${#args[@]} ]]; do
           if [[ "${args[$i]}" == "--from" ]]; then
             i=$((i+1))
             task="${args[$i]}"
@@ -151,8 +151,8 @@ function god() {
       fi
       local task=""
       local args=("${@:2}")
-      local i=0
-      while [[ $i -lt ${#args[@]} ]]; do
+      local i=1
+      while [[ $i -le ${#args[@]} ]]; do
         if [[ "${args[$i]}" == "--from" ]]; then
           i=$((i+1))
           task="${args[$i]}"
